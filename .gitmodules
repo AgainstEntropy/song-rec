@@ -1,0 +1,3 @@
+[submodule "xlm_roberta"]
+	path = xlm_roberta
+	url = https://huggingface.co/jinaai/xlm-roberta-flash-implementation
