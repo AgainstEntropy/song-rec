@@ -25,13 +25,13 @@ To use Flash-Attention:
 pip install flash-attn --no-build-isolation
 ```
 
-## Download the model
+### Download the model
 
 ```bash
 huggingface-cli download jinaai/jina-embeddings-v3 --local-dir ./models/jina-embeddings-v3
 ```
 
-## Embed the data
+### Embed the data
 
 You can either create the embeddings from the raw data:
 
@@ -45,8 +45,8 @@ Or download the pre-computed embeddings from [Google Drive](https://drive.google
 
 Follow the blocks in [`test_query.ipynb`](./test_query.ipynb).
 
+## Run the app
 
-## TODO
-
-- [ ] Add Big data trick to current inference pipeline, e.g., MapReduce.
-- [ ] Add a frontend, e.g., Streamlit or Gradio.
+```bash
+streamlit run song_recommender.py
+```
