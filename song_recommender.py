@@ -44,13 +44,13 @@ def load_model_and_data():
 
     # Load song data
     try:
-        df = pd.read_csv(DATA_PATH)
-        st.success(f"Song data loaded: {df.shape[0]} records")
+        song_data = pd.read_csv(DATA_PATH)
+        st.success(f"Song data loaded: {song_data.shape[0]} records")
     except Exception as e:
         st.error(f"Error loading song data: {e}")
-        raise
+        raise RuntimeError(f"Error loading song data: {e}")
 
-    return model, passage_embeddings, df
+    return model, passage_embeddings, song_data
 
 
 def compute_similarity(
@@ -130,22 +130,75 @@ if __name__ == "__main__":
                         similarities, k=num_recommendations
                     )
 
-                    # Retrieve recommendations
-                    recommendations = retrieve_top_k_entries(song_data, top_k_indices)
+                    # Store recommendations and similarities in session state
+                    st.session_state.recommendations = retrieve_top_k_entries(
+                        song_data, top_k_indices
+                    )
+                    st.session_state.similarities = top_k_similarities
 
                     toc = time.time()
                     st.success(f"Time taken: {toc - tic:.2f} seconds")
 
-                    st.subheader("Your Recommendations:")
-                    for i, song in enumerate(recommendations.itertuples(), 1):
-                        st.markdown(
-                            f"""
-                            **{i}. {song.artist} - {song.song} - score: {top_k_similarities[i-1]:.3f}**
-                            - Lyrics Snippet: {song.text[:200]}...
-                            - [More Info]({song.link})
-                            """
-                        )
                 except Exception as e:
-                    st.error(f"Error during recommendation generation: {e}")
-        else:
-            st.warning("Please enter a query to get recommendations.")
+                    st.error(f"Error computing similarities: {e}")
+
+    # Display recommendations if they exist in session state
+    if hasattr(st.session_state, "recommendations"):
+        st.subheader("Your Recommendations:")
+
+        # Create two columns: one for cards, one for lyrics display
+        col1, col2 = st.columns([2, 3])
+
+        # Initialize session state for selected lyrics if not exists
+        if "selected_lyrics" not in st.session_state:
+            st.session_state.selected_lyrics = None
+
+        with col1:
+            for i, song in enumerate(st.session_state.recommendations.itertuples(), 1):
+                score = st.session_state.similarities[i - 1]
+                # Create a card-like container for each song
+                with st.container():
+                    st.markdown(
+                        f"""
+                        <div style="
+                            padding: 1rem;
+                            border-radius: 0.5rem;
+                            background-color: #f0f2f6;
+                            margin-bottom: 1rem;
+                            cursor: pointer;
+                            transition: transform 0.2s;
+                            ">
+                            <h4 style="margin: 0;">{i}. {song.song}</h4>
+                            <p style="margin: 0.5rem 0;">artist: {song.artist}</p>
+                            <p style="margin: 0; font-size: 0.8rem;">score: {score:.3f}</p>
+                            <a href="{song.link}" target="_blank" style="font-size: 0.8rem;">More Info ↗</a>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                    # Button to show lyrics
+                    if st.button("Show Lyrics", key=f"btn_{i}"):
+                        st.session_state.selected_lyrics = {
+                            "title": song.song,
+                            "artist": song.artist,
+                            "text": song.text,
+                        }
+
+        # Display lyrics in the second column
+        with col2:
+            st.markdown(
+                """
+                <div style="position: sticky; top: 0;">
+                    <h3>Lyrics</h3>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+            if st.session_state.selected_lyrics:
+                st.markdown(f"**{st.session_state.selected_lyrics['title']}**")
+                st.markdown(f"*by {st.session_state.selected_lyrics['artist']}*")
+                st.markdown(st.session_state.selected_lyrics["text"])
+            else:
+                st.markdown("*Click 'Show Lyrics' on any song to view its lyrics here*")
