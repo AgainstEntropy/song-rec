@@ -13,6 +13,24 @@ cd song-rec
 git submodule update --init --recursive
 ```
 
+## Project Structure
+
+```bash
+song-rec                        # Root directory
+├── README.md
+├── requirements.txt            # Python dependencies
+├── embed.py                    # Embed the data
+├── song_recommender.py         # Streamlit app
+├── test_query.ipynb            # Test the query
+├── data                        # Raw data
+│   └── spotify_millsongdata.csv
+├── embeddings                  # Pre-computed embeddings
+│   └── jina-embeddings-v3_retrieval.passage.npy
+├── models                      # Model files
+│   └── jina-embeddings-v3
+└── xlm_roberta                 # Hugging Face model files
+```
+
 ## Installation
 
 ```bash
